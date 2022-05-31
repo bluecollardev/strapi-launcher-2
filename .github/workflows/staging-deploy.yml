@@ -83,10 +83,11 @@ jobs:
 
       - name: Generate the Strapi CMS application files
         run: |
-          docker run -d --rm \
+          docker run -it \
             --name ${{ env.BUILD_IMAGE_NAME }} \
             -v `pwd`/app:/srv/app \
             ${{ env.BUILD_IMAGE_NAME }}
+          docker cp $(docker inspect --format="{{.Id}}" ${{ env.BUILD_IMAGE_NAME }}):/srv/app `pwd`/app
           ls -la `pwd`/app
 
       - name: Build the Strapi CMS application image
