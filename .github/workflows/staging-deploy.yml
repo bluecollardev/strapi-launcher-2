@@ -87,6 +87,7 @@ jobs:
             --name ${{ env.BUILD_IMAGE_NAME }} \
             -v `pwd`/app:/srv/app \
             ${{ env.BUILD_IMAGE_NAME }}
+          ls -la /app
 
       - name: Build the Strapi CMS application image
         uses: docker/build-push-action@v3
