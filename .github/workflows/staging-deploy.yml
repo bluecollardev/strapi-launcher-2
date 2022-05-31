@@ -88,7 +88,6 @@ jobs:
             --name ${{ env.BUILD_CONTAINER_NAME }} \
             -v `pwd`/app:/srv/app \
             ${{ env.BUILD_IMAGE_NAME }}
-          mkdir `pwd`/app
           docker cp ${{ env.BUILD_CONTAINER_NAME }}:/srv/build/. `pwd`/app
           ls -la `pwd`/app
 
