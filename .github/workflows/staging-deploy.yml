@@ -89,7 +89,7 @@ jobs:
             -u $(id -u ${USER}):$(id -g ${USER}) \
             -v `pwd`/app:/srv/app \
             ${{ env.BUILD_IMAGE_NAME }}
-          docker cp ${{ env.BUILD_CONTAINER_NAME }}:/srv/build/. `pwd`/app
+          sudo docker cp ${{ env.BUILD_CONTAINER_NAME }}:/srv/build/. `pwd`/app
           ls -la `pwd`/app
 
       - name: Build the Strapi CMS application image
