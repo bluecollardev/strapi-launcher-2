@@ -39,6 +39,7 @@ COPY ./app /srv/build
 RUN yarn install
 # Add any additional dependencies or strapi plugins here
 RUN yarn add @strapi/provider-upload-aws-s3
+RUN chmod -R a+rwX /srv/build
 RUN ls -la /srv/build
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["-f", "/dev/null"]
