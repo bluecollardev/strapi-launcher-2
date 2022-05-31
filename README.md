@@ -36,10 +36,10 @@ docker build \
   --build-arg DATABASE_CLIENT=postgres \
   --build-arg DATABASE_HOST=host.docker.internal \
   --build-arg DATABASE_PORT=5432 \
-  --build-arg DATABASE_NAME=bluecollardev_cms \
+  --build-arg DATABASE_NAME=strapi_demo \
   --build-arg DATABASE_USERNAME=postgres \
   --build-arg DATABASE_PASSWORD=postgres \
-  -t bluecollardev/strapi-cms-base:4.1.12-node16-alpine \
+  -t strapi-cms-base \
   --progress=plain \
   ./strapi
 ```
@@ -51,9 +51,9 @@ We follow a similar process for our staging and production deployments.
 
 ```shell
 docker run -d --rm \
-  --name bluecollardev-strapi-cms-builder \
+  --name strapi-cms-builder \
   -v `pwd`/app:/srv/app \
-  bluecollardev/strapi-cms-base:4.1.12-node16-alpine
+  strapi-cms-base
 ```
 
 ### Running the CMS application (locally)
@@ -79,7 +79,7 @@ First, build the application image. Don't forget to supply the same NODE_VERSION
 ```shell
 docker build \
   --build-arg NODE_VERSION=16.15.0-alpine \
-  -t bluecollardev/strapi-cms:4.1.12-node16-alpine \
+  -t strapi-cms \
   --progress=plain \
   ./app
 ```
@@ -97,7 +97,7 @@ Note! You may have to set DATABASE_HOST to `host.docker.internal` when running l
 ```shell
 docker run -it \
   --rm \
-  --name bluecollardev-strapi-cms \
+  --name strapi-cms \
   -p 1337:1337 \
   -p 5432:5432 \
   -e HOST=0.0.0.0 \
@@ -111,7 +111,7 @@ docker run -it \
   -e AWS_ACCESS_SECRET='' \
   -e AWS_REGION='' \
   -e AWS_BUCKET='' \
-  bluecollardev/strapi-cms:4.1.12-node16-alpine yarn strapi develop
+  strapi-cms yarn strapi develop
 ```
 
 ### Quick start using docker-compose

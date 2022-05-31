@@ -41,4 +41,4 @@ RUN yarn install
 RUN yarn add @strapi/provider-upload-aws-s3
 RUN ls -la /srv/build
 ENTRYPOINT ["docker-entrypoint.sh"]
-
+CMD ["-f", "/dev/null"]

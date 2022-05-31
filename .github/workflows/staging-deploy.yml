@@ -13,7 +13,8 @@ env:
   # TODO: Username and password will need to be updated
   REGISTRY_USERNAME: ${{ github.actor }} # TODO: Does this need updating?
   REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }} # TODO: Add secret in GHA
-  BUILD_IMAGE_NAME: 'strapi-cms-builder' # Only used in GHA workflow
+  BUILD_IMAGE_NAME: 'strapi-cms-build' # Only used in GHA workflow
+  BUILD_CONTAINER_NAME: 'strapi-cms-builder' # Only used in GHA workflow
   CMS_IMAGE_NAME: 'strapi-cms' # Only used in GHA workflow
   NODE_VERSION: '16.15.0-alpine'
   STRAPI_PKG: '@strapi/strapi@4.1.12'
@@ -83,11 +84,11 @@ jobs:
 
       - name: Generate the Strapi CMS application files
         run: |
-          docker run -it \
-            --name ${{ env.BUILD_IMAGE_NAME }} \
+          docker run -d \
+            --name ${{ env.BUILD_CONTAINER_NAME }} \
             -v `pwd`/app:/srv/app \
             ${{ env.BUILD_IMAGE_NAME }}
-          docker cp $(docker inspect --format="{{.Id}}" ${{ env.BUILD_IMAGE_NAME }}):/srv/app `pwd`/app
+          docker cp ${{ env.BUILD_CONTAINER_NAME }}:/srv/build `pwd`/app
           ls -la `pwd`/app
 
       - name: Build the Strapi CMS application image
