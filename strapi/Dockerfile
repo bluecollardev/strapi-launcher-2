@@ -35,11 +35,17 @@ COPY ./docker-entrypoint.sh /usr/local/bin/
 # Copy custom files into our strapi installation
 # Use unaliased cp to force overwrite
 COPY ./app /srv/build
+
 # Install strapi core dependencies
-RUN yarn install
+# We don't need to do this? Looks like strapi new already runs the install
+# RUN yarn install
+
 # Add any additional dependencies or strapi plugins here
 RUN yarn add @strapi/provider-upload-aws-s3
+
+# Update owner and permissions so we can copy the files out of the container
 RUN chmod -R a+rwX /srv/build
 RUN ls -la /srv/build
+
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["-f", "/dev/null"]
