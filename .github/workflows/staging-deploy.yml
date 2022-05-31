@@ -62,7 +62,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           # TODO: These will need to be configured properly for the organization
           username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ env.GITHUB_TOKEN }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
