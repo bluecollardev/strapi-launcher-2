@@ -1,6 +1,6 @@
-# bluecollardev-website-cms
+# bluecollardev-strapi-cms
 
-Strapi CMS for the Opn corporate website.
+Strapi CMS demo.
 
 ### Build and deployment overview
 
