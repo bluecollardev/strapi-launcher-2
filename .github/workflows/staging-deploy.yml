@@ -84,6 +84,8 @@ jobs:
 
       - name: Generate the Strapi CMS application files
         run: |
+          mkdir `pwd`/app
+          ls -l `pwd`/app
           docker run -d \
             --name ${{ env.BUILD_CONTAINER_NAME }} \
             -u $(id -u ${USER}):$(id -g ${USER}) \
@@ -135,7 +137,7 @@ jobs:
 
       - name: Build the Strapi CMS application
         run: |
-          docker run -it \
+          docker run -d \
             --rm \
             --name strapi-cms \
             -p 1337:1337 \
