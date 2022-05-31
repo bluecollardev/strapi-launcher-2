@@ -13,8 +13,8 @@ env:
   # TODO: Username and password will need to be updated
   REGISTRY_USERNAME: ${{ github.actor }} # TODO: Does this need updating?
   REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }} # TODO: Add secret in GHA
-  BUILD_IMAGE_NAME: 'strapi-cms-builder:4.1.12-node16-alpine' # Only used in GHA workflow
-  CMS_IMAGE_NAME: 'strapi-cms:4.1.12-node16-alpine' # Only used in GHA workflow
+  BUILD_IMAGE_NAME: 'strapi-cms-builder' # Only used in GHA workflow
+  CMS_IMAGE_NAME: 'strapi-cms' # Only used in GHA workflow
   NODE_VERSION: '16.15.0-alpine'
   STRAPI_PKG: '@strapi/strapi@4.1.12'
   # Used when running the Strapi build image which generates the Strapi application
