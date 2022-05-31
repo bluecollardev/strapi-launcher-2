@@ -1,0 +1,121 @@
+name: staging-deploy
+
+# TODO: Update branches once we're done testing workflow on temp branch
+on:
+  push:
+    branches: [ temp ]
+  pull_request:
+    branches: [ temp ]
+
+env:
+  # Used when building the Strapi build images
+  REGISTRY: 'ghcr.io' # Only used in GHA workflow
+  # TODO: Username and password will need to be updated
+  REGISTRY_USERNAME: ${{ github.actor }} # TODO: Does this need updating?
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }} # TODO: Add secret in GHA
+  BUILD_IMAGE_NAME: 'bluecollardev/strapi-cms-builder:4.1.12-node16-alpine' # Only used in GHA workflow
+  CMS_IMAGE_NAME: 'bluecollardev/strapi-cms:4.1.12-node16-alpine' # Only used in GHA workflow
+  NODE_VERSION: '16.15.0-alpine'
+  STRAPI_PKG: '@strapi/strapi@4.1.12'
+  # Used when running the Strapi build image which generates the Strapi application
+  DATABASE_CLIENT: postgres
+  DATABASE_HOST: ${{ secrets.DATABASE_HOST }} # TODO: This will need to be updated
+  DATABASE_PORT: ${{ secrets.DATABASE_PORT }} # TODO: This MAY need to be updated
+  DATABASE_NAME: ${{ secrets.DATABASE_NAME }} # TODO: This will need to be updated
+  DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }} # TODO: Add secret in GHA
+  DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }} # TODO: Add secret in GHA
+  DATABASE_SSL: true
+  # Used by the generated Strapi application
+  HOST: 0.0.0.0 # TODO: This will need to be updated
+  PORT: 1337 # TODO: This will need to be updated
+  APP_KEYS: ${{ secrets.APP_KEYS }} # TODO: Note - Strapi default generated APP_KEYS contains four separate comma-separated keys
+  API_TOKEN_SALT: ${{ secrets.API_TOKEN_SALT }}
+  ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  # For AWS upload support using @strapi/provider-upload-aws-s3
+  # See docker-entrypoint.sh
+  # TODO: Do these need updating?
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_ACCESS_SECRET: ${{ secrets.AWS_ACCESS_SECRET }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+
+# TODO: Does this need updating?
+permissions:
+  contents: read
+  packages: write
+  # This is used to complete the identity challenge
+  # with sigstore/fulcio when running outside of PRs.
+  id-token: write
+
+jobs:
+  deploy:
+    environment: staging
+    name: Build Opn CMS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          # TODO: These will need to be configured properly for the organization
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push the Strapi CMS base image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ env.BUILD_IMAGE_NAME }}
+          context: ./strapi
+          file: ./strapi/Dockerfile
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            STRAPI_PKG=${{ env.STRAPI_PKG }}
+            DATABASE_CLIENT=${{ env.DATABASE_CLIENT }}
+            DATABASE_HOST=${{ env.DATABASE_HOST }}
+            DATABASE_PORT=${{ env.DATABASE_PORT }}
+            DATABASE_NAME=${{ env.DATABASE_NAME }}
+            DATABASE_USERNAME=${{ env.DATABASE_USERNAME }}
+            DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
+
+      - name: Generate the Strapi CMS application files
+        run: |
+          docker run -d --rm \
+            --name ${{ env.BUILD_IMAGE_NAME }} \
+            -v `pwd`/app:/srv/app \
+            bluecollardev/strapi-cms-base:4.1.12-node16-alpine
+
+      - name: Build the Strapi CMS application image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ env.CMS_IMAGE_NAME }}
+          context: ./app
+          file: ./app/Dockerfile
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+
+      - name: Build the Strapi CMS application
+        run: |
+          docker run -it \
+            --rm \
+            --name bluecollardev-strapi-cms \
+            -p 1337:1337 \
+            -p 5432:5432 \
+            -e HOST=${{ env.HOST }} \
+            -e PORT=${{ env.PORT }} \
+            -e DATABASE_HOST=${{ env.DATABASE_HOST }} \
+            -e APP_KEYS=${{ env.APP_KEYS }} \
+            -e API_TOKEN_SALT=${{ env.API_TOKEN_SALT }} \
+            -e JWT_SECRET=${{ env.JWT_SECRET }} \
+            -e AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} \
+            -e AWS_ACCESS_SECRET=${{ env.AWS_ACCESS_SECRET }} \
+            -e AWS_REGION=${{ env.AWS_REGION }} \
+            -e AWS_BUCKET=${{ env.AWS_BUCKET }} \
+            ${{ env.CMS_IMAGE_NAME }} yarn strapi build

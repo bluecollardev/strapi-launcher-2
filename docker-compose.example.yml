@@ -1,0 +1,49 @@
+# Sample docker-compose file for running locally
+version: '3.8'
+services:
+  cms:
+    container_name: cms
+    build:
+      context: ./app
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: host.docker.internal
+      DATABASE_PORT: 5432
+      DATABASE_NAME: strapi_demo
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_SSL: false
+      # For AWS upload support using @strapi/provider-upload-aws-s3
+      # See docker-entrypoint.sh
+      AWS_ACCESS_KEY_ID: ''
+      AWS_ACCESS_SECRET: ''
+      AWS_REGION: ''
+      AWS_BUCKET: ''
+    ports:
+      - '1337:1337'
+    depends_on:
+      - builder
+      - db
+  builder:
+    container_name: builder
+    build:
+      context: strapi
+    environment:
+      NODE_VERSION: 16.15.0-alpine
+      STRAPI_PKG: @strapi/strapi@4.1.12
+    volumes:
+      - ./app:/srv/app
+    ports:
+      - '1337:1337'
+    depends_on:
+      - db
+  db:
+    container_name: postgres
+    image: postgres
+    restart: always
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: strapi_demo
