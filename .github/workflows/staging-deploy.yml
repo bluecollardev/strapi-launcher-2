@@ -136,7 +136,7 @@ jobs:
         run: |
           docker run -it \
             --rm \
-            --name bluecollardev-strapi-cms \
+            --name strapi-cms \
             -p 1337:1337 \
             -p 5432:5432 \
             -e HOST=${{ env.HOST }} \

@@ -1,4 +1,4 @@
-# bluecollardev-strapi-cms
+# strapi-cms
 
 Strapi CMS demo.
 
