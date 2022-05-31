@@ -62,7 +62,6 @@ jobs:
       - name: Build and export the Strapi CMS base image
         uses: docker/build-push-action@v3
         with:
-          push: true
           tags: ${{ env.BUILD_IMAGE_NAME }}
           context: ./strapi
           file: ./strapi/Dockerfile
@@ -92,7 +91,6 @@ jobs:
       - name: Build the Strapi CMS application image
         uses: docker/build-push-action@v3
         with:
-          push: true
           tags: ${{ env.CMS_IMAGE_NAME }}
           context: ./app
           file: ./app/Dockerfile
