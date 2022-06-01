@@ -36,10 +36,6 @@ COPY ./docker-entrypoint.sh /usr/local/bin/
 # Use unaliased cp to force overwrite
 COPY ./app /srv/build
 
-# Install strapi core dependencies
-# We don't need to do this? Looks like strapi new already runs the install
-# RUN yarn install
-
 # Add any additional dependencies or strapi plugins here
 RUN yarn add @strapi/provider-upload-aws-s3
 
