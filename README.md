@@ -49,12 +49,18 @@ docker build \
 To generate the CMS application using the Strapi CMS base image we created in the previous step, run the following script.
 We follow a similar process for our staging and production deployments.
 
+IMPORTANT! We can run as a detached process locally, which improves performance. However, if you do this from within
+a workflow (any build runner), the task may move on before the file generation is completed, leading to errors.
+Make sure you remove the `-d` flag when executing this step in a runner!
+
 ```shell
 docker run -d --rm \
   --name strapi-cms-builder \
   -v `pwd`/app:/srv/app \
   strapi-cms-base
 ```
+
+Wait for the step to complete before continuing. Files will be generated in the mounted `./app` folder on the host.
 
 ### Running the CMS application (locally)
 
