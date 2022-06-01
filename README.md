@@ -49,7 +49,7 @@ docker build \
 To generate the CMS application using the Strapi CMS base image we created in the previous step, run the following script.
 We follow a similar process for our staging and production deployments.
 
-IMPORTANT! We can run as a detached process locally, which improves performance. However, if you do this from within
+<b>IMPORTANT!</b> We can run as a detached process locally, which improves performance. However, if you do this from within
 a workflow (any build runner), the task may move on before the file generation is completed, leading to errors.
 Make sure you remove the `-d` flag when executing this step in a runner!
 
@@ -61,6 +61,9 @@ docker run -d --rm \
 ```
 
 Wait for the step to complete before continuing. Files will be generated in the mounted `./app` folder on the host.
+
+<b>IMPORTANT!</b> If your IDE isn't showing the project files, simply check via terminal - they'll be in there. Sometimes IntelliJ refuses
+to display files in build folders excluded from the project.
 
 ### Running the CMS application (locally)
 
@@ -95,7 +98,7 @@ The database defaults will have already been configured when we initially built 
 
 To run in development mode, you can use the script below as is. Don't forget to fill in the AWS variables!
 
-Note! You may have to set DATABASE_HOST to `host.docker.internal` when running locally or you'll get an error: 
+<b>IMPORTANT!</b> You may have to set DATABASE_HOST to `host.docker.internal` when running locally or you'll get an error: 
 *connect ECONNREFUSED 0.0.0.0:5432*
 
 <b>To compile distribution files for production</b>, replace `yarn strapi develop` with `yarn strapi build`.
