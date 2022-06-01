@@ -11,7 +11,6 @@ RUN mkdir /srv/build && chown 1000:1000 -R /srv/build
 WORKDIR /srv/build
 VOLUME /srv/build
 
-FROM strapi-base as strapi-cms-base
 ARG DATABASE_CLIENT
 ARG DATABASE_HOST
 ARG DATABASE_PORT
@@ -20,8 +19,7 @@ ARG DATABASE_USERNAME
 ARG DATABASE_PASSWORD
 ARG DATABASE_SSL
 ARG EXTRA_ARGS
-# Optionally bust cache
-# ARG CACHEBUST=0
+
 RUN DOCKER=true strapi new . \
   --dbclient=${DATABASE_CLIENT} \
   --dbhost=${DATABASE_HOST} \
@@ -30,18 +28,29 @@ RUN DOCKER=true strapi new . \
   --dbusername=${DATABASE_USERNAME} \
   --dbpassword=${DATABASE_PASSWORD} \
   --dbssl=${DATABASE_SSL} \
-  ${EXTRA_ARGS}
-COPY ./docker-entrypoint.sh /usr/local/bin/
+  ${EXTRA_ARGS} \
+
+FROM strapi-base as strapi-cms-base
+# Optionally bust cache
+ARG CACHEBUST=0
+
+COPY ./builder-entrypoint.sh .
 # Copy custom files into our strapi installation
 # Use unaliased cp to force overwrite
-COPY ./app /srv/build
+COPY ./app/. /srv/tmp
+# Update permissions so we can copy the files out of the container
+# Make sure Dockerfile and entrypoint are executable
+RUN chmod -R a+rwx /srv/tmp \
+    && cp -Rf /srv/tmp/. . \
+    && rm -rf /srv/tmp \
+    && rm -f ./.env* \
+    && chmod a+rwx Dockerfile builder-entrypoint.sh
 
-# Add any additional dependencies or strapi plugins here
+# Install package deps
+RUN yarn install
+# Add any additional dependencies or strapi plugins herecp --help
+
 RUN yarn add @strapi/provider-upload-aws-s3
 
-# Update owner and permissions so we can copy the files out of the container
-RUN chmod -R a+rwX /srv/build
-RUN ls -la /srv/build
-
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["-f", "/dev/null"]
+ENTRYPOINT ["./builder-entrypoint.sh"]
+# CMD ["tail", "-f", "/dev/null"]

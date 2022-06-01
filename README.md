@@ -39,25 +39,24 @@ docker build \
   --build-arg DATABASE_NAME=strapi_demo \
   --build-arg DATABASE_USERNAME=postgres \
   --build-arg DATABASE_PASSWORD=postgres \
-  -t strapi-cms-base \
+  -t strapi-cms-build \
   --progress=plain \
   ./strapi
 ```
 
 ### Generating the CMS application
 
-To generate the CMS application using the Strapi CMS base image we created in the previous step, run the following script.
-We follow a similar process for our staging and production deployments.
+To generate the CMS application using the Strapi CMS base image we created in the previous step, 
+run the following script. We follow a similar process for our staging and production deployments.
 
-<b>IMPORTANT!</b> We can run as a detached process locally, which improves performance. However, if you do this from within
-a workflow (any build runner), the task may move on before the file generation is completed, leading to errors.
-Make sure you remove the `-d` flag when executing this step in a runner!
+<b>IMPORTANT!</b> Make sure you don't run this in detached mode `-d` or the container may 
+shut down before files are copied into the mounted `./app` volume.
 
 ```shell
-docker run -d --rm \
+docker run --rm \
   --name strapi-cms-builder \
   -v `pwd`/app:/srv/app \
-  strapi-cms-base
+  strapi-cms-build
 ```
 
 Wait for the step to complete before continuing. Files will be generated in the mounted `./app` folder on the host.
@@ -67,7 +66,34 @@ to display files in build folders excluded from the project.
 
 ### Running the CMS application (locally)
 
-Open a terminal window and navigate to the `./app` folder. Run the app using `yarn strapi develop`.
+<b>NOTE!</b> You can skip this step if you're going to run the application in Docker. 
+
+Open a terminal window and navigate to the `./app` folder.
+
+Run the following script in your terminal. 
+
+- We run yarn install again because our base image was built for Alpine Linux. You'll probably need to rebuild node_modules for your local environment.
+- Note that we run `yarn build` to rebuild the admin panel if you aren't using port 1337 or admin panel will error: https://github.com/strapi/strapi/issues/12826
+
+```shell
+yarn install
+export APP_KEYS=pnnOz4ItNpDQ+5vRIUP4cA==,JLxLnJiqbbM+xmfXsXAxgw==,ym53dOPwxger/RepMVaCxg==,oFZuX6GaxTwpesiMKA24OA==
+export API_TOKEN_SALT=GJ7EC5bDlq95mbH7u/rXDQ==
+export ADMIN_JWT_SECRET=bRoIMxutKJgCU4s/4Nv3WA==
+export JWT_SECRET=FWgNGMQOVEgLeEgnujtJXg==
+export AWS_ACCESS_KEY_ID=''
+export AWS_ACCESS_SECRET=''
+export AWS_REGION=''
+export AWS_BUCKET=''
+export DATABASE_HOST=0.0.0.0
+export PORT=8080
+yarn strapi build
+yarn strapi develop
+```
+
+Remember to set the `DATABASE_HOST` environment variable because we defaulted to `host.docker.internal` 
+(if you're following the previous examples), which is required to access a
+database on the host machine when running the application in a Docker container.
 
 You may run into the following error:
 *Could not load js config file: node_modules/@strapi/plugin-upload/strapi-server.js*
@@ -87,6 +113,7 @@ First, build the application image. Don't forget to supply the same NODE_VERSION
 
 ```shell
 docker build \
+  --no-cache \
   --build-arg NODE_VERSION=16.15.0-alpine \
   -t strapi-cms \
   --progress=plain \
@@ -98,20 +125,20 @@ The database defaults will have already been configured when we initially built 
 
 To run in development mode, you can use the script below as is. Don't forget to fill in the AWS variables!
 
-<b>IMPORTANT!</b> You may have to set DATABASE_HOST to `host.docker.internal` when running locally or you'll get an error: 
-*connect ECONNREFUSED 0.0.0.0:5432*
-
-<b>To compile distribution files for production</b>, replace `yarn strapi develop` with `yarn strapi build`.
-
 ```shell
-docker run -it \
+docker run \
   --rm \
   --name strapi-cms \
-  -p 1337:1337 \
+  -p 8080:8080 \
   -p 5432:5432 \
   -e HOST=0.0.0.0 \
-  -e PORT=1337 \
+  -e PORT=8080 \
+  -e DATABASE_CLIENT=postgres \
   -e DATABASE_HOST=host.docker.internal \
+  -e DATABASE_PORT=5432 \
+  -e DATABASE_NAME=strapi_demo \
+  -e DATABASE_USERNAME=postgres \
+  -e DATABASE_PASSWORD=postgres \
   -e APP_KEYS=pnnOz4ItNpDQ+5vRIUP4cA==,JLxLnJiqbbM+xmfXsXAxgw==,ym53dOPwxger/RepMVaCxg==,oFZuX6GaxTwpesiMKA24OA== \
   -e API_TOKEN_SALT=GJ7EC5bDlq95mbH7u/rXDQ== \
   -e ADMIN_JWT_SECRET=bRoIMxutKJgCU4s/4Nv3WA== \
@@ -120,8 +147,10 @@ docker run -it \
   -e AWS_ACCESS_SECRET='' \
   -e AWS_REGION='' \
   -e AWS_BUCKET='' \
-  strapi-cms yarn strapi develop
+  strapi-cms
 ```
+
+<b>IMPORTANT!</b> Make sure you remove the `-it` flags when executing this step in a runner (TTY is not supported).
 
 ### Quick start using docker-compose
 
@@ -132,7 +161,7 @@ run the following command: `docker compose up`
 
 As this project builds the CMS application from scratch using a clean Strapi installation,
 any Strapi plugins (which are NPM packages) need to be added when we create the Strapi docker image.
-Plugins or 3rd party libraries should be added in `./strapi/docker-entrypoint.sh`. Do not alter the package.json in
+Plugins or 3rd party libraries should be added in `./strapi/Dockerfile`. Do not alter the package.json in
 the generated Strapi application files residing in the `./app` dir as it is automatically generated as part of the build process.
 
 #### Notes regarding @strapi/provider-upload-aws-s3
